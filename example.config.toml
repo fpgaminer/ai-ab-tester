@@ -1,0 +1,3 @@
+admin_secret = "314afd07c4b48c37d3fc85770b7a5d393238910d1eb617ed71dcdadd2e23c446"
+database_url = "postgresql://postgres:test@localhost/postgres"
+bind = "127.0.0.1:8080"

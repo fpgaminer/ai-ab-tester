@@ -1,0 +1,63 @@
+html, body {
+	width: 100%;
+}
+
+.main-wrapper {
+	margin: 15px;
+	max-width: 1000px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.row {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	width: 100%;
+}
+
+.column {
+	display: flex;
+	flex-direction: column;
+	flex-basis: 100%;
+	flex: 1;
+	text-align: center;
+	align-items: center;
+}
+
+.study-header {
+	padding-bottom: 5em;
+}
+
+.study-header-note {
+	font-style: italic;
+}
+
+.option-title {
+	font-weight: bold;
+	font-size: 2em;
+	padding-bottom: 1em;
+}
+
+.option-text-row {
+	margin-bottom: 2em;
+}
+
+.option-text {
+
+}
+
+.button-row {
+	margin-bottom: 5em;
+}
+
+.hints-row {
+	font-style: italic;
+}
+
+button {
+	font-weight: bold;
+	max-width: 400px;
+	min-width: 200px;
+	padding: 8px 0;
+}
