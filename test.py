@@ -21,9 +21,17 @@ def main():
 	for _ in range(10):
 		text1 = str(random.random())
 		text2 = str(random.random())
-		resp = requests.post(f"{SERVER_URL}/project/new_sample", headers={"Authorization": f"Bearer {project_admin_token}"}, json={"project": project_id, "text1": text1, "text2": text2})
+		source1 = str(random.random())
+		source2 = str(random.random())
+		resp = requests.post(f"{SERVER_URL}/project/new_sample", headers={"Authorization": f"Bearer {project_admin_token}"}, json={
+			"project": project_id,
+			"text1": text1,
+			"text2": text2,
+			"source1": source1,
+			"source2": source2,
+		})
 		resp.raise_for_status()
-		expected_samples.append([text1, text2])
+		expected_samples.append([text1, text2, source1, source2])
 	
 	# Verify the samples
 	resp = requests.get(f"{SERVER_URL}/project/get_samples", headers={"Authorization": f"Bearer {project_id}"})
@@ -32,6 +40,8 @@ def main():
 	for sample,server_sample in zip(expected_samples, server_samples):
 		assert server_sample['text1'] == sample[0]
 		assert server_sample['text2'] == sample[1]
+		assert server_sample['source1'] == sample[2]
+		assert server_sample['source2'] == sample[3]
 	
 	# Submit some ratings
 	expected_ratings = []

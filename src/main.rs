@@ -101,6 +101,8 @@ struct NewSampleRequest {
 	project: AuthToken,
 	text1: String,
 	text2: String,
+	source1: String,
+	source2: String,
 }
 
 #[actix_web::post("/project/new_sample")]
@@ -129,10 +131,12 @@ async fn new_sample(db_pool: Data<sqlx::PgPool>, auth_token: UnvalidatedAuthToke
 	}
 
 	// Insert the sample
-	sqlx::query("INSERT INTO samples (project_id, text1, text2) VALUES ($1,$2,$3)")
+	sqlx::query("INSERT INTO samples (project_id, text1, text2, source1, source2) VALUES ($1,$2,$3,$4,$5)")
 		.bind(&request.project.0[..])
 		.bind(&request.text1)
 		.bind(&request.text2)
+		.bind(&request.source1)
+		.bind(&request.source2)
 		.execute(&**db_pool)
 		.await
 		.context("Insert new sample")?;
@@ -236,10 +240,12 @@ async fn get_samples(db_pool: Data<sqlx::PgPool>, project_id: UnvalidatedAuthTok
 		id: i64,
 		text1: String,
 		text2: String,
+		source1: String,
+		source2: String,
 	}
 
 	// Query the database for samples
-	let samples = sqlx::query_as::<_, DbSample>("SELECT id, text1, text2 FROM samples WHERE project_id = $1")
+	let samples = sqlx::query_as::<_, DbSample>("SELECT id, text1, text2, source1, source2 FROM samples WHERE project_id = $1")
 		.bind(&project_id.0[..])
 		.fetch_all(&**db_pool)
 		.await
