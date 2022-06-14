@@ -14,6 +14,7 @@ FROM debian:bullseye-slim
 COPY --from=builder /usr/local/cargo/bin/ai-ab-tester /usr/local/bin/
 COPY webapp/dist/index.html ./webapp/dist/
 COPY webapp/dist/main.bundle.js ./webapp/dist/
+COPY webapp/dist/main.css ./webapp/dist/
 
 EXPOSE 8080
 
