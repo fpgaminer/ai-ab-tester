@@ -1,27 +1,45 @@
 // Get the hash of the current page
 var g_project_id = location.hash.substring(1);
+var g_samples = [];
 
-async function api_get_random_sample(project_id) {
-	const response = await fetch('/project/get_sample', {
+async function api_get_samples() {
+	const response = await fetch('/project/get_samples', {
 		headers: {
-			'Authorization': 'Bearer ' + project_id,
-		}
+			'Authorization': 'Bearer ' + g_project_id,
+		},
 	});
 
-	// Check return status
+	if (response.status != 200) {
+		if (response.status == 401) {
+			alert("OOPS: Unknown study");
+			return null;
+		}
+		alert("OOPS: I had trouble talking to the server. Please try again later.");
+		return null;
+	}
+
+	return await response.json();
+}
+
+
+async function api_get_my_ratings() {
+	const response = await fetch('/project/get_my_ratings', {
+		headers: {
+			'Authorization': 'Bearer ' + g_project_id,
+		},
+	});
+
 	if (response.status != 200) {
 		if (response.status == 401) {
 			alert("OOPS: Unknown study");
 			return null;
 		}
 
-		// Log the error message
 		alert("OOPS: I had trouble talking to the server. Please try again later.");
-		console.log('Error: ' + response.statusText);
-		return null;
+		return;
 	}
 
-	return response.json();
+	return await response.json();
 }
 
 
@@ -44,6 +62,28 @@ async function api_rate_sample(project_id, sample_id, rating) {
 	}
 
 	return true;
+}
+
+
+async function get_my_samples() {
+	const samples = await api_get_samples();
+	const my_ratings = await api_get_my_ratings();
+
+	if (samples === null || my_ratings === null) {
+		return null;
+	}
+
+	// Samples as a dictionary using the sample id as the key
+	const samples_dict = {};
+	for (const sample of samples) {
+		samples_dict[sample.id] = sample;
+	}
+
+	for (const rating of my_ratings) {
+		delete samples_dict[rating.sample_id];	
+	}
+
+	return Object.values(samples_dict);
 }
 
 
@@ -73,13 +113,18 @@ function onKeyUp(event) {
 }
 
 
-async function get_random_sample(project_id) {
+async function get_random_sample() {
 	console.debug("Getting new sample...");
 
-	const sample = await api_get_random_sample(project_id);
-	if (sample === null) {
+	// Take a random sample from g_samples and remove it
+	if (g_samples.length == 0) {
+		alert("No more samples to rate. Thank you for your participation!");
 		return;
 	}
+
+	const sample_idx = Math.floor(Math.random() * g_samples.length);
+	const sample = g_samples[sample_idx];
+	g_samples.splice(sample_idx, 1);
 
 	// Randomly flip the text
 	const flip = Math.random() < 0.5;
@@ -100,11 +145,13 @@ async function get_random_sample(project_id) {
 
 
 async function main() {
-	// Verify the project id
-	if (await api_get_random_sample(g_project_id) === null) {
-		document.querySelector('.study_id').textContent = "UNKNOWN";
+	const samples = await get_my_samples();
+
+	if (samples === null) {
 		return;
 	}
+
+	g_samples = samples;
 
 	document.querySelector('.study_id').textContent = g_project_id.substring(0, 8);
 

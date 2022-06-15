@@ -62,6 +62,12 @@ def main():
 
 	for server_rating in server_ratings:
 		expected_ratings.remove([server_rating['sample_id'], server_rating['rating']])
+	
+	# Test get_my_ratings
+	# Note: This doesn't fully test get_my_ratings functionality
+	resp = requests.get(f"{SERVER_URL}/project/get_my_ratings", headers={"Authorization": f"Bearer {project_id}"})
+	resp.raise_for_status()
+	assert(set((x['id'], x['rating'], x['sample_id']) for x in resp.json()) == set((x['id'], x['rating'], x['sample_id']) for x in server_ratings))
 
 
 if __name__ == '__main__':

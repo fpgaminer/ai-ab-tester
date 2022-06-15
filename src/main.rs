@@ -60,6 +60,7 @@ async fn main() -> Result<(), anyhow::Error> {
 			.service(get_samples)
 			.service(new_rating)
 			.service(get_ratings)
+			.service(get_my_ratings)
 			.service(Files::new("/", "webapp/dist/").index_file("index.html"))
 	})
 	.bind(&config.bind)?
@@ -168,6 +169,19 @@ async fn get_sample(db_pool: Data<sqlx::PgPool>, project_id: UnvalidatedAuthToke
 }
 
 
+fn get_masked_ip(http_request: &HttpRequest, server_config: &Config) -> Result<hmac::Tag, ServerError> {
+	let connection_info = http_request.connection_info();
+	let user_ip = connection_info.realip_remote_addr().ok_or_else(|| anyhow::Error::msg("Could not get remote address"))?;
+	let user_ip: IpAddr = user_ip.parse().context("Could not parse remote address")?;
+	let user_ip_octets = match user_ip {
+		IpAddr::V4(ip) => ip.octets().to_vec(),
+		IpAddr::V6(ip) => ip.octets().to_vec(),
+	};
+	let hash_key = hmac::Key::new(hmac::HMAC_SHA256, &server_config.admin_secret.0);
+	Ok(hmac::sign(&hash_key, &user_ip_octets))
+}
+
+
 #[derive(Deserialize)]
 struct NewRatingRequest {
 	sample_id: i64,
@@ -187,15 +201,7 @@ async fn new_rating(db_pool: Data<sqlx::PgPool>, project_id: UnvalidatedAuthToke
 		return Ok(HttpResponse::NotFound().body("Unknown Project"));
 	}
 
-	let connection_info = http_request.connection_info();
-	let user_ip = connection_info.realip_remote_addr().ok_or_else(|| anyhow::Error::msg("Could not get remote address"))?;
-	let user_ip: IpAddr = user_ip.parse().context("Could not parse remote address")?;
-	let user_ip_octets = match user_ip {
-		IpAddr::V4(ip) => ip.octets().to_vec(),
-		IpAddr::V6(ip) => ip.octets().to_vec(),
-	};
-	let hash_key = hmac::Key::new(hmac::HMAC_SHA256, &server_config.admin_secret.0);
-	let hashed_ip = hmac::sign(&hash_key, &user_ip_octets);
+	let hashed_ip = get_masked_ip(&http_request, &server_config)?;
 
 	// Insert the rating
 	sqlx::query("INSERT INTO ratings (project_id, sample_id, ip, rating) VALUES ($1,$2,$3,$4)")
@@ -225,6 +231,29 @@ async fn get_ratings(db_pool: Data<sqlx::PgPool>, project_id: UnvalidatedAuthTok
 	// Query the database for ratings
 	let ratings = sqlx::query_as::<_, DbRating>("SELECT id, sample_id, ip, rating FROM ratings WHERE project_id = $1")
 		.bind(&project_id.0[..])
+		.fetch_all(&**db_pool)
+		.await
+		.context("Query ratings")?;
+	
+	Ok(HttpResponse::Ok().json(ratings))
+}
+
+
+#[actix_web::get("/project/get_my_ratings")]
+async fn get_my_ratings(db_pool: Data<sqlx::PgPool>, project_id: UnvalidatedAuthToken, http_request: HttpRequest, server_config: Data<Config>) -> Result<HttpResponse, ServerError> {
+	#[derive(sqlx::FromRow, Serialize)]
+	struct DbRating {
+		id: i64,
+		sample_id: i64,
+		rating: i32,
+	}
+
+	let hashed_ip = get_masked_ip(&http_request, &server_config)?;
+
+	// Query the database for ratings
+	let ratings = sqlx::query_as::<_, DbRating>("SELECT id, sample_id, rating FROM ratings WHERE project_id = $1 AND ip = $2")
+		.bind(&project_id.0[..])
+		.bind(hashed_ip.as_ref())
 		.fetch_all(&**db_pool)
 		.await
 		.context("Query ratings")?;
