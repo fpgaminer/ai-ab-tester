@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX unique_sample ON samples (project_id, text1, text2, source1, source2);
