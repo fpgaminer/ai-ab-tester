@@ -25,6 +25,8 @@ API:
 		* Authorization: Bearer PROJECT_ID
 		* Returns: Json [ { id, sample_id, ip, rating }]
 		* NOTE: ip is cryptographically hashed to improve user privacy.  Only the ADMIN could possibly reverse the hash.
+	* GET /projects/get_my_ratings
+		* Same as `/projects/get_my_ratings`, except only returns ratings made by the requester's IP
 
 
 
