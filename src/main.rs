@@ -132,7 +132,7 @@ async fn new_sample(db_pool: Data<sqlx::PgPool>, auth_token: UnvalidatedAuthToke
 	}
 
 	// Insert the sample
-	sqlx::query("INSERT INTO samples (project_id, text1, text2, source1, source2) VALUES ($1,$2,$3,$4,$5)")
+	sqlx::query("INSERT INTO samples (project_id, text1, text2, source1, source2) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING")
 		.bind(&request.project.0[..])
 		.bind(&request.text1)
 		.bind(&request.text2)

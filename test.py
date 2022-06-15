@@ -33,10 +33,21 @@ def main():
 		resp.raise_for_status()
 		expected_samples.append([text1, text2, source1, source2])
 	
+	# Submit a duplicate sample to test the unique constraint
+	resp = requests.post(f"{SERVER_URL}/project/new_sample", headers={"Authorization": f"Bearer {project_admin_token}"}, json={
+		"project": project_id,
+		"text1": text1,
+		"text2": text2,
+		"source1": source1,
+		"source2": source2,
+	})
+	resp.raise_for_status()
+	
 	# Verify the samples
 	resp = requests.get(f"{SERVER_URL}/project/get_samples", headers={"Authorization": f"Bearer {project_id}"})
 	resp.raise_for_status()
 	server_samples = resp.json()
+	server_samples.sort(key=lambda x: x["id"])
 	for sample,server_sample in zip(expected_samples, server_samples):
 		assert server_sample['text1'] == sample[0]
 		assert server_sample['text2'] == sample[1]
