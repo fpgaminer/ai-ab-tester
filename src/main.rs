@@ -34,7 +34,7 @@ async fn main() -> Result<(), anyhow::Error> {
 	let config: Config = toml::from_str(&config).context("reading config")?;
 
 	// Env logger
-	env_logger::Builder::from_env(Env::default().default_filter_or("warn,actix_web=debug,rm_personal_cloud=debug,actix_server=info")).init();
+	env_logger::Builder::from_env(Env::default().default_filter_or("warn,actix_web=debug,ai_ab_tester=debug,actix_server=info")).init();
 
 	// Setup Database
 	let db_pool = PgPoolOptions::new()
