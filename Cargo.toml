@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 actix = "0.13.0"
-actix-web = "4.3.1"
+actix-web = "4.4.0"
 env_logger = "0.10.0"
 hex = { version = "0.4.3", features = ["serde"] }
 sqlx = { version = "0.7", features = ["postgres", "runtime-tokio", "tls-rustls"] }
