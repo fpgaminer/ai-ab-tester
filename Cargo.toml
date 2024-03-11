@@ -9,7 +9,7 @@ actix-web = "4.5.1"
 env_logger = "0.11.3"
 hex = { version = "0.4.3", features = ["serde"] }
 sqlx = { version = "0.7", features = ["postgres", "runtime-tokio", "tls-rustls"] }
-toml = "0.8.10"
+toml = "0.8.11"
 serde = { version = "1", features = ["derive"] }
 anyhow = "1"
 log = "0.4.21"
