@@ -1,4 +1,4 @@
-FROM rust:latest as builder
+FROM rust:slim-bullseye as builder
 
 WORKDIR /usr/src/ai-ab-tester
 COPY src ./src
